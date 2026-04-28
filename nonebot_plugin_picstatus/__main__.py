@@ -56,12 +56,10 @@ async def get_pic_from_msg(msg: UniMessage) -> BgBytesData | None:
 
 @stat_matcher.handle()
 async def _(bot: BaseBot, event: BaseEvent, state: T_State, msg: OriginalUniMsg):
-    if (
-        (bot.self_id not in bot_avatar_cache)
-        and (info := bot_info_cache.get(bot.self_id))
-        and info.avatar
-    ):
-        await cache_bot_avatar(info.avatar, bot, event, state)
+    if bot.self_id not in bot_avatar_cache:
+        info = bot_info_cache.get(bot.self_id)
+        if info and info.avatar:
+            await cache_bot_avatar(bot)
 
     async def get_bg():
         with warning_suppress("Failed to fetch image from user message"):

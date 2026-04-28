@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import TypeAlias
 
 import psutil
-from psutil._common import sdiskio, sdiskpart
 
 from ..config import config
 from ..util import match_list_regexp
@@ -15,6 +14,12 @@ from . import (
     periodic_collector,
 )
 
+_io_sample = psutil.disk_io_counters()
+sdiskio = type(_io_sample) if _io_sample else Any
+
+# 修复 sdiskpart (磁盘分区)
+_dp_sample = psutil.disk_partitions()
+sdiskpart = type(_dp_sample[0]) if _dp_sample else Any
 
 @dataclass
 class DiskUsageNormal:

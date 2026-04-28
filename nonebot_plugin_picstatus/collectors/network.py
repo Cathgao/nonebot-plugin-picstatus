@@ -5,7 +5,6 @@ from typing import TypeAlias
 
 import psutil
 from httpx import AsyncClient, ReadTimeout
-from psutil._common import snetio
 
 from ..config import TestSiteCfg, config
 from ..util import match_list_regexp
@@ -16,6 +15,8 @@ from . import (
     collector,
     normal_collector,
 )
+
+snetio = type(psutil.net_io_counters())
 
 
 @dataclass

@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from datetime import datetime
 from typing import Any
+import httpx
 
 from cookit.loguru import log_exception_warning
 from nonebot import get_driver, logger
@@ -100,20 +101,19 @@ if config.ps_count_message_sent_event is not True:
             send_num[bot.self_id] += 1
 
 
-async def cache_bot_avatar(avatar: str, bot: BaseBot, event: BaseEvent, state: T_State):
-    try:
-        img = await image_fetch(event, bot, state, Image(url=avatar))
-    except Exception as e:
-        log_exception_warning(e, f"Failed to get avatar of bot {bot.self_id}")
-        return None
-    else:
-        if not img:
-            logger.warning(
-                f"Cannot get avatar of bot {bot.self_id}"
-                f" because image_fetch returned None",
-            )
-    bot_avatar_cache[bot.self_id] = img
-    return img
+async def cache_bot_avatar(bot: BaseBot):
+    info = bot_info_cache.get(bot.self_id)
+    if info and info.avatar and isinstance(info.avatar, str):
+        try:
+            async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+                resp = await client.get(info.avatar)
+                if resp.status_code == 200:
+                    img = resp.content
+                    bot_avatar_cache[bot.self_id] = img
+                    return img
+        except Exception as e:
+            logger.warning(f"下载机器人 {bot.self_id} 头像失败: {e}")
+    return None
 
 
 async def cache_bot_info(bot: BaseBot):
